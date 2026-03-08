@@ -1,0 +1,3 @@
+opentele
+PySocks
+pyinstaller>=6.0
