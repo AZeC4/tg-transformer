@@ -55,29 +55,50 @@ jobs:
     - name: Build executable
       run: python build.py
       env:
-        # Linux CI 没有显示器，使用虚拟显示
         DISPLAY: ${{ runner.os == 'Linux' && ':99' || '' }}
 
-    # 重命名产物，加上平台后缀方便下载
-    - name: Rename artifact
+    # 列出构建产物（调试用）
+    - name: List build output
+      shell: bash
+      run: ls -la dist/
+
+    # Windows 用 PowerShell 重命名（避免 bash 中文编码问题）
+    - name: Rename artifact (Windows)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        $src = "dist/TG-Converter${{ matrix.ext }}"
+        $dst = "dist/TG-Converter-${{ matrix.platform }}${{ matrix.ext }}"
+        if (Test-Path $src) {
+          Copy-Item $src $dst
+          Write-Output "✅ Build artifact found and renamed"
+        } else {
+          Write-Output "❌ Build artifact NOT found"
+          Get-ChildItem dist/
+          exit 1
+        }
+
+    # macOS / Linux 用 bash 重命名
+    - name: Rename artifact (Unix)
+      if: runner.os != 'Windows'
       shell: bash
       run: |
-        cd dist
-        if [ -f "TG账号格式转换${{ matrix.ext }}" ]; then
-          cp "TG账号格式转换${{ matrix.ext }}" "TG账号格式转换-${{ matrix.platform }}${{ matrix.ext }}"
-          echo "✅ Build artifact found"
-          ls -la
+        src="dist/TG-Converter${{ matrix.ext }}"
+        dst="dist/TG-Converter-${{ matrix.platform }}${{ matrix.ext }}"
+        if [ -f "$src" ]; then
+          cp "$src" "$dst"
+          echo "✅ Build artifact found and renamed"
         else
           echo "❌ Build artifact NOT found, listing dist:"
-          ls -la
+          ls -la dist/
           exit 1
         fi
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: TG-converter-${{ matrix.platform }}
-        path: dist/TG账号格式转换-${{ matrix.platform }}${{ matrix.ext }}
+        name: TG-Converter-${{ matrix.platform }}
+        path: dist/TG-Converter-${{ matrix.platform }}${{ matrix.ext }}
         retention-days: 5
 
   release:
@@ -92,11 +113,8 @@ jobs:
         path: artifacts
         merge-multiple: true
 
-    - name: List downloaded files
-      run: |
-        echo "📦 Release files:"
-        find artifacts -type f | head -20
-        ls -la artifacts/ || true
+    - name: List release files
+      run: ls -laR artifacts/
 
     - name: Create Release
       uses: softprops/action-gh-release@v2

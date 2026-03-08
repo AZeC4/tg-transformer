@@ -9,10 +9,14 @@ import platform
 
 def main():
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    # CI 环境使用英文名避免 Windows 编码问题，本地打包用中文名
+    is_ci = os.environ.get("CI") == "true" or os.environ.get("GITHUB_ACTIONS") == "true"
+    app_name = "TG-Converter" if is_ci else "TG账号格式转换"
+
     cmd = [
         sys.executable, "-m", "PyInstaller",
         "--onefile",           # 单文件
-        "--name", "TG账号格式转换",
+        "--name", app_name,
         "--clean",
         "--noconfirm",
         # opentele 依赖 PyQt/PySide，需整体收集
