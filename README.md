@@ -21,6 +21,8 @@ python converter.py
 ## 不会python直接下载运行二进制文件
 考虑有的小伙伴，由于电脑没有python环境也没有编程基础，于是帮打包好放到了release里面可自行下载，然后双击直接运行。
 
+下载地址：[https://github.com/AZeC4/tg-transformer/releases/tag/v1.0.3](https://github.com/AZeC4/tg-transformer/releases/tag/v1.0.3)
+
 ## 使用步骤
 
 1. **选择转换方向**
