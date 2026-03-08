@@ -1,47 +1,107 @@
-name: Build and Release (Optimized)
+name: Build and Release
 
 on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:  # 支持手动触发
+
+permissions:
+  contents: write
 
 jobs:
   build:
     strategy:
+      fail-fast: false  # 某个平台失败不影响其他平台继续构建
       matrix:
         include:
-          - os: ubuntu-latest
-            artifact_name: TG账号格式转换
           - os: windows-latest
-            artifact_name: TG账号格式转换.exe
+            platform: windows
+            ext: .exe
           - os: macos-latest
-            artifact_name: TG账号格式转换.app
+            platform: macos
+            ext: ""
+          - os: ubuntu-latest
+            platform: linux
+            ext: ""
 
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
     - uses: actions/checkout@v4
 
     - name: Set up Python 3.11
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
-        cache: 'pip'  # 自动缓存pip依赖
+        cache: 'pip'
 
-    - name: Install dependencies
+    # Linux 需要安装 tkinter 和显示相关的系统依赖
+    - name: Install system dependencies (Linux)
+      if: runner.os == 'Linux'
       run: |
-        python -m pip install --upgrade pip
+        sudo apt-get update
+        sudo apt-get install -y python3-tk libxcb-xinerama0 libxkbcommon-x11-0 libxcb-cursor0
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip setuptools wheel
         pip install -r requirements-build.txt -r requirements.txt
+      env:
+        PIP_DEFAULT_TIMEOUT: 120
+        PIP_RETRIES: 5
 
     - name: Build executable
       run: python build.py
+      env:
+        # Linux CI 没有显示器，使用虚拟显示
+        DISPLAY: ${{ runner.os == 'Linux' && ':99' || '' }}
+
+    # 重命名产物，加上平台后缀方便下载
+    - name: Rename artifact
+      shell: bash
+      run: |
+        cd dist
+        if [ -f "TG账号格式转换${{ matrix.ext }}" ]; then
+          cp "TG账号格式转换${{ matrix.ext }}" "TG账号格式转换-${{ matrix.platform }}${{ matrix.ext }}"
+          echo "✅ Build artifact found"
+          ls -la
+        else
+          echo "❌ Build artifact NOT found, listing dist:"
+          ls -la
+          exit 1
+        fi
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: TG-converter-${{ matrix.platform }}
+        path: dist/TG账号格式转换-${{ matrix.platform }}${{ matrix.ext }}
+        retention-days: 5
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+        merge-multiple: true
+
+    - name: List downloaded files
+      run: |
+        echo "📦 Release files:"
+        find artifacts -type f | head -20
+        ls -la artifacts/ || true
 
     - name: Create Release
-      uses: softprops/action-gh-release@v1
-      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v2
       with:
-        files: dist/${{ matrix.artifact_name }}
+        files: artifacts/*
         draft: false
         prerelease: false
         generate_release_notes: true
