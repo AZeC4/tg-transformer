@@ -28,7 +28,7 @@ def main():
 
     cmd.append("converter.py")
     subprocess.run(cmd, check=True)
-    print("完成。可执行文件在 dist/ 目录下。")
+    print("Done. Output is in dist/ directory.")
 
 if __name__ == "__main__":
     main()
