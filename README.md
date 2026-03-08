@@ -23,8 +23,7 @@ python converter.py
 
 下载地址：[https://github.com/AZeC4/tg-transformer/releases/tag/v1.0.3](https://github.com/AZeC4/tg-transformer/releases/tag/v1.0.3)
 
-<img width="600" height="588" alt="图片" src="https://github.com/user-attachments/assets/adf117fd-4697-4070-900f-6959d0d5eed8" />
-
+<img width="595" height="582" alt="图片" src="https://github.com/user-attachments/assets/7cc68e68-a190-4ac6-8613-0eec23f516a0" />
 
 ## 使用步骤
 
