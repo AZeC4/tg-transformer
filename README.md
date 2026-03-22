@@ -73,6 +73,10 @@ git push origin v1.0.0
 ## 不会python直接下载运行二进制文件
 考虑有的小伙伴，由于电脑没有python环境也没有编程基础，于是帮打包好放到了release里面可自行下载，然后双击直接运行。
 
+下载地址：[https://github.com/AZeC4/tg-transformer/releases/tag/v1.0.3](https://github.com/AZeC4/tg-transformer/releases/tag/v1.0.3)
+
+<img width="595" height="582" alt="图片" src="https://github.com/user-attachments/assets/7cc68e68-a190-4ac6-8613-0eec23f516a0" />
+
 ## 使用步骤
 
 1. **选择转换方向**
