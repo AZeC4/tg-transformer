@@ -6,15 +6,20 @@ from tkinter import ttk, filedialog, messagebox
 import threading
 import asyncio
 import os
+import sys
 import webbrowser
 
 
 class TGConverterApp:
+    _opentele_patched = False
+
     def __init__(self, root):
         self.root = root
         self.root.title("Telegram 账号格式转换工具")
-        self.root.geometry("600x560")
-        self.root.resizable(False, False)
+
+        self.root.geometry("620x620")
+        self.root.minsize(620, 580)
+        self.root.resizable(False, True)
 
         self.conv_type = tk.StringVar(value="s2t")
         self.source_path = tk.StringVar()
@@ -181,6 +186,11 @@ class TGConverterApp:
             self.proxy_row.pack(fill="x", pady=(6, 0))
         else:
             self.proxy_row.pack_forget()
+        # 自动调整窗口高度，避免底部广告被遮挡
+        self.root.update_idletasks()
+        req_h = self.root.winfo_reqheight()
+        cur_w = self.root.winfo_width()
+        self.root.geometry(f"{cur_w}x{max(req_h, 580)}")
 
     # ── 校验 ──────────────────────────────────────────────────────────────
 
@@ -240,7 +250,9 @@ class TGConverterApp:
         threading.Thread(target=self._run, args=(proxy,), daemon=True).start()
 
     def _run(self, proxy):
-        self._patch_opentele_userid()
+        if not TGConverterApp._opentele_patched:
+            self._patch_opentele_userid()
+            TGConverterApp._opentele_patched = True
         try:
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
@@ -286,6 +298,7 @@ class TGConverterApp:
             async with sem:
                 name = os.path.splitext(os.path.basename(sf))[0]
                 session_name = sf[:-8] if sf.endswith(".session") else sf
+                client = None
                 try:
                     client = TelegramClient(
                         session_name, api=API.TelegramDesktop, proxy=proxy
@@ -293,10 +306,15 @@ class TGConverterApp:
                     await client.connect()
                     tdesk = await client.ToTDesktop(flag=UseCurrentSession)
                     tdesk.SaveTData(os.path.join(out, name, "tdata"))
-                    await client.disconnect()
                     return (name, None)
                 except Exception as e:
                     return (name, str(e))
+                finally:
+                    if client:
+                        try:
+                            await client.disconnect()
+                        except Exception:
+                            pass
 
         results = await asyncio.gather(*[convert_one(sf) for sf in session_files])
         ok = sum(1 for _, err in results if err is None)
@@ -375,15 +393,21 @@ class TGConverterApp:
                     return (os.path.basename(account_root), "tdata 加载失败")
                 name = os.path.basename(account_root.rstrip("/\\")) or "output"
                 session_out = os.path.join(out, name)
+                client = None
                 try:
                     client = await tdesk.ToTelethon(
                         session_out, flag=CreateNewSession, proxy=proxy
                     )
                     await client.connect()
-                    await client.disconnect()
                     return (name, None)
                 except Exception as e:
                     return (name, str(e))
+                finally:
+                    if client:
+                        try:
+                            await client.disconnect()
+                        except Exception:
+                            pass
 
         results = await asyncio.gather(*[convert_one(r) for r in account_roots])
         ok = sum(1 for _, err in results if err is None)
@@ -418,6 +442,13 @@ class TGConverterApp:
 
 
 if __name__ == "__main__":
+    # Windows 高 DPI 适配（必须在 Tk() 之前调用）
+    if sys.platform == "win32":
+        try:
+            from ctypes import windll
+            windll.shcore.SetProcessDpiAwareness(1)
+        except Exception:
+            pass
     root = tk.Tk()
     app = TGConverterApp(root)
     root.mainloop()

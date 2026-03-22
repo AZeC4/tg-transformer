@@ -18,6 +18,58 @@ pip install -r requirements.txt
 ```bash
 python converter.py
 ```
+
+## 提交到 GitHub 并触发自动打包
+
+本项目的 GitHub Action 在以下两种情况下会运行：
+
+- 推送标签：`v*`（例如 `v1.0.0`）会自动构建并发布三端二进制。
+- 手动触发：在 GitHub 的 Actions 页面点击 `Build and Release` 的 `Run workflow`。
+
+### 第一次把本地项目提交到 GitHub
+
+先在 GitHub 创建一个空仓库（不要勾选 README 和 .gitignore），然后在项目目录执行：
+
+```bash
+git init
+git add .
+git commit -m "init: first commit"
+git branch -M main
+git remote add origin https://github.com/你的用户名/你的仓库名.git
+git push -u origin main
+```
+
+### 后续日常更新代码
+
+```bash
+git add .
+git commit -m "feat: 描述你的修改"
+git push origin main
+```
+
+### 触发自动打包（推荐）
+
+当你需要自动打包并生成 Release 时，打一个版本标签并推送：
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+如果该标签已经存在并需要重发：
+
+```bash
+git tag -d v1.0.0
+git push origin :refs/tags/v1.0.0
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+### 如何确认 Action 是否成功
+
+- 打开仓库的 `Actions` 页面，查看 `Build and Release`。
+- 成功后去仓库 `Releases` 页面下载构建产物（Windows/macOS/Linux）。
+
 ## 不会python直接下载运行二进制文件
 考虑有的小伙伴，由于电脑没有python环境也没有编程基础，于是帮打包好放到了release里面可自行下载，然后双击直接运行。
 
