@@ -247,9 +247,10 @@ class TGConverterApp:
         ip = self.proxy_ip.get().strip()
         port = int(self.proxy_port.get())
         ptype = self.proxy_type.get()
+        # rdns=True 让代理服务器做 DNS 解析，避免本地无法解析 Telegram 服务器地址
         if ptype == "http":
-            return (socks.HTTP, ip, port)
-        return (socks.SOCKS5, ip, port)
+            return (socks.HTTP, ip, port, True)
+        return (socks.SOCKS5, ip, port, True)
 
     # ── 转换入口 ──────────────────────────────────────────────────────────
 
@@ -269,6 +270,9 @@ class TGConverterApp:
             self._patch_opentele_userid()
             TGConverterApp._opentele_patched = True
         try:
+            # Windows 必须使用 SelectorEventLoop，ProactorEventLoop 与 PySocks 不兼容
+            if sys.platform == "win32":
+                asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             msg = loop.run_until_complete(self._convert(proxy))
@@ -316,7 +320,8 @@ class TGConverterApp:
                 client = None
                 try:
                     client = TelegramClient(
-                        session_name, api=API.TelegramDesktop, proxy=proxy
+                        session_name, api=API.TelegramDesktop, proxy=proxy,
+                        timeout=30, connection_retries=3,
                     )
                     await client.connect()
                     tdesk = await client.ToTDesktop(flag=UseCurrentSession)
@@ -411,7 +416,8 @@ class TGConverterApp:
                 client = None
                 try:
                     client = await tdesk.ToTelethon(
-                        session_out, flag=CreateNewSession, proxy=proxy
+                        session_out, flag=CreateNewSession, proxy=proxy,
+                        timeout=30, connection_retries=3,
                     )
                     await client.connect()
                     return (name, None)
