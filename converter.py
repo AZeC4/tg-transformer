@@ -25,6 +25,7 @@ class TGConverterApp:
         self.source_path = tk.StringVar()
         self.output_path = tk.StringVar()
         self.use_proxy = tk.BooleanVar(value=False)
+        self.proxy_type = tk.StringVar(value="http")
         self.proxy_ip = tk.StringVar(value="127.0.0.1")
         self.proxy_port = tk.StringVar(value="7890")
 
@@ -99,18 +100,27 @@ class TGConverterApp:
 
         ttk.Checkbutton(
             pf,
-            text="启用 SOCKS5 代理",
+            text="启用代理",
             variable=self.use_proxy,
             command=self._toggle_proxy,
         ).pack(anchor="w")
 
         self.proxy_row = tk.Frame(pf)
-        tk.Label(self.proxy_row, text="IP 地址:").pack(side="left")
-        ttk.Entry(self.proxy_row, textvariable=self.proxy_ip, width=18).pack(
+        # 代理类型选择
+        type_row = tk.Frame(self.proxy_row)
+        type_row.pack(fill="x", pady=(0, 6))
+        tk.Label(type_row, text="代理类型:").pack(side="left")
+        ttk.Radiobutton(type_row, text="HTTP", variable=self.proxy_type, value="http").pack(side="left", padx=(5, 10))
+        ttk.Radiobutton(type_row, text="SOCKS5", variable=self.proxy_type, value="socks5").pack(side="left")
+        # IP + 端口
+        addr_row = tk.Frame(self.proxy_row)
+        addr_row.pack(fill="x")
+        tk.Label(addr_row, text="IP 地址:").pack(side="left")
+        ttk.Entry(addr_row, textvariable=self.proxy_ip, width=18).pack(
             side="left", padx=(5, 20)
         )
-        tk.Label(self.proxy_row, text="端口:").pack(side="left")
-        ttk.Entry(self.proxy_row, textvariable=self.proxy_port, width=8).pack(
+        tk.Label(addr_row, text="端口:").pack(side="left")
+        ttk.Entry(addr_row, textvariable=self.proxy_port, width=8).pack(
             side="left", padx=5
         )
 
@@ -229,12 +239,17 @@ class TGConverterApp:
             return None
         try:
             import socks  # PySocks
-            return (socks.SOCKS5, self.proxy_ip.get().strip(), int(self.proxy_port.get()))
         except ImportError:
             messagebox.showerror(
-                "依赖缺失", "使用 SOCKS5 代理需要 PySocks 库:\npip install PySocks"
+                "依赖缺失", "使用代理需要 PySocks 库:\npip install PySocks"
             )
             return "error"
+        ip = self.proxy_ip.get().strip()
+        port = int(self.proxy_port.get())
+        ptype = self.proxy_type.get()
+        if ptype == "http":
+            return (socks.HTTP, ip, port)
+        return (socks.SOCKS5, ip, port)
 
     # ── 转换入口 ──────────────────────────────────────────────────────────
 
