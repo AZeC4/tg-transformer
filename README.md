@@ -1,6 +1,6 @@
 ### Telegram 账号格式转换工具（请勿使用网上随便搜索的转换工具有盗号风险！项目开源，无任何盗号风险）
 
-协议号自助下单机器人：[https://t.me/xieyihaoautobot](https://t.me/xieyihaoautobot)
+协议号自助下单机器人：[https://faka.tg10000.com](https://faka.tg10000.com)
 
 在「协议号」（session 文件）与「直登号」（tdata）之间互相转换，带图形界面。
 
