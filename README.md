@@ -73,7 +73,8 @@ git push origin v1.0.0
 
 下载地址：[https://github.com/AZeC4/tg-transformer/releases/tag/v1.0.7](https://github.com/AZeC4/tg-transformer/releases/tag/v1.0.7)
 
-<img width="595" height="582" alt="图片" src="https://github.com/user-attachments/assets/7cc68e68-a190-4ac6-8613-0eec23f516a0" />
+<img width="620" height="648" alt="image" src="https://github.com/user-attachments/assets/5f7ce376-4c36-4643-93fc-bfd43a365dd9" />
+
 
 ## 使用步骤
 
