@@ -139,12 +139,6 @@ class TGConverterApp:
         # 自定义广告（蓝色、字号加大、底部留白防遮挡，网站可点击）
         adf = tk.Frame(main)
         adf.pack(pady=(16, 20))
-        lb1 = tk.Label(
-            adf, text="协议号批发：@xieyihaoautobot",
-            fg="#0066cc", font=("Arial", 13), cursor="hand2"
-        )
-        lb1.pack()
-        lb1.bind("<Button-1>", lambda e: webbrowser.open("https://t.me/xieyihaoautobot"))
         lb2 = tk.Label(
             adf, text="电报导航：dianbaodaohang.com",
             fg="#0066cc", font=("Arial", 13), cursor="hand2"
